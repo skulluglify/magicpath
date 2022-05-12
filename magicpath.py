@@ -1,17 +1,20 @@
 #!/usr/bin/env python
+#cython: language_level=3
 
-from __future__ import annotations, division, print_function
+# from __future__ import annotations, division, print_function
 
 import os, platform
 import ntpath as nt
 import posixpath as ps
 import pathlib as pl
 
-from typing import Callable, Generator, Any, List, Union
-from singletons import Path, PathFinderNSType, System, MagicPathType, WinPath
+from typing import Callable, Generator, Any, List, TypeVar, Union
+from .singletons import Path, PathFinderNSType, System, MagicPathType, WinPath
 
 #? make dynamic path
 #? platform.system() in ("Linux", "Darwin", "Java", "Windows")
+
+MagicPath = TypeVar("MagicPath", bound="MagicPath")
 
 class MagicPath(MagicPathType):
 

@@ -1,14 +1,18 @@
 #!/usr/bin/env python
+#cython: language_level=3
 
-from __future__ import annotations, division, print_function
+# from __future__ import annotations, division, print_function
 
 import os, platform
 import ntpath as nt
 import pathlib as pl
 
-from typing import Callable, Generator, Any, List, Union
-from magicpath import MagicPath
-from singletons import Path, PathFinderNSType, PathFinderType, System, WinPath
+from typing import Callable, Generator, Any, List, TypeVar, Union
+from .magicpath import MagicPath
+from .singletons import Path, PathFinderNSType, PathFinderType, System, WinPath
+
+PathFinderNS = TypeVar("PathFinderNS", bound="PathFinderNS")
+PathFinder = TypeVar("PathFinder", bound="PathFinder")
 
 class PathFinderNS(PathFinderNSType):
 
@@ -215,7 +219,7 @@ class PathFinder(PathFinderType):
 
     #****************************************************************************************************************#
     #*                                                                                                              *#
-    #* methods from MagicPath                                                                                       *#
+    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
     #*                                                                                                              *#
     #****************************************************************************************************************#
 
@@ -280,9 +284,9 @@ class PathFinder(PathFinderType):
 
         return self.p.get_root(src)
     
-    def shift(self: PathFinderType, src: Union[str, Path]) -> Path:
+    # def shift(self: PathFinderType, src: Union[str, Path]) -> Path:
 
-        return self.p.shift(src)
+    #     return self.p.shift(src)
     
     def is_root(self: PathFinderType, src: Union[str, Path], diff: bool = False) -> bool:
 
@@ -310,7 +314,7 @@ class PathFinder(PathFinderType):
 
     #****************************************************************************************************************#
     #*                                                                                                              *#
-    #* methods from MagicPath                                                                                       *#
+    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
     #*                                                                                                              *#
     #****************************************************************************************************************#
 

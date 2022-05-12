@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+env PYTHONPATH=`pwd`/lib64/ dbus-launch ./test
+

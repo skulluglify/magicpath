@@ -13,4 +13,4 @@
 - PathFinderType
 
 # about projekt
-home cooked, make fun with converting path in different platform
+home cooked, make fun with conversion paths on different platforms

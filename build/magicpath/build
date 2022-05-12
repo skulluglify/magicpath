@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+cwd=`pwd`
+cd $(dirname $0)
+
+cp -r ../../{singletons,magicpath,pathfinder,test}.py .
+cython3 -o test.c test.py --embed
+cythonize3 {singletons,magicpath,pathfinder}.py
+
+function compile() {
+
+  if [ -f $1\.c ]; then
+
+    gcc -pthread -Os -Wall `pkg-config --cflags --libs python3 python3-embed` -fpic $1\.c -o $1
+
+  else
+
+    echo -en "\x1b[1;31;40m$1 not found\x21\x1b[0m\n" && exit 1
+
+  fi
+}
+
+
+function compile_shared() {
+
+  if [ -f $1\.c ]; then
+
+    gcc -shared -pthread -Os -Wall `pkg-config --cflags --libs python3` -fpic $1\.c -o $1\.so
+
+  else
+
+    echo -en "\x1b[1;31;40m$1 not found\x21\x1b[0m\n" && exit 1
+
+  fi
+}
+
+compile_shared singletons
+compile_shared magicpath
+compile_shared pathfinder
+compile test
+
+rm -f *.{py,c}
+
+mkdir -p lib64/magicpath
+cp -r ../../__init__.py lib64/magicpath/
+mv *.so lib64/magicpath
+
+cat << EOF >main
+#!/usr/bin/env bash
+
+env PYTHONPATH=\`pwd\`/lib64/ dbus-launch ./test
+
+EOF
+
+chmod a+x ./main
+
+cd $cwd
