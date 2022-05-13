@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+cwd=`pwd`
+cd $(dirname $0)
+
+wm=$(python3 wm.py)
+
+repl=$(cat << EOF
+#!/usr/bin/env python3
+
+c: str
+context: str
+
+context = """context = \"$wm\""""
+
+with open("./wm.__init__.py", "r+") as f:
+
+    c = f.read()
+    c = c.replace("## watermark", context.replace("\\n", "\\\\n"))
+
+    print(c)
+EOF
+)
+
+cat <<< $repl | python3 >__init__.py
+
+cd $cwd

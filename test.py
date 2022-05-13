@@ -2,8 +2,7 @@
 #cython: language_level=3
 
 import os, sys, time
-from magicpath.pathfinder import PathFinder
-from magicpath.singletons import PathFinderType, Path, WinPath
+from magicpath import PathFinder, PathFinderType, Path, WinPath
 
 __file__: str = sys.argv.__getitem__(0)
 

@@ -11,7 +11,7 @@ def __wm() -> None:
 
     context: str
 
-    context = "#==============================================================#\n# MagicPath created by <skulluglify@outlook.com/>              #\n# version build v1.0.0 alpha, 2022-05-13 19:37:33.692429       #\n#==============================================================#"
+    ## watermark
 
     print(context)
 
@@ -19,4 +19,3 @@ def __wm() -> None:
 if not str(os.getenv("DISABLE_WM_MAGICPATH")).lower() in ("1","y","true"):
 
      __wm()
-

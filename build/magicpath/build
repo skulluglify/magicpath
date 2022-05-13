@@ -3,6 +3,12 @@
 cwd=`pwd`
 cd $(dirname $0)
 
+## watermark
+if [ -f ../../wm ]; then
+
+  bash ../../wm
+fi
+
 cp -r ../../{singletons,magicpath,pathfinder,test}.py .
 cython3 -o test.c test.py --embed
 cythonize3 {singletons,magicpath,pathfinder}.py
@@ -47,9 +53,12 @@ mv *.so lib64/magicpath
 
 cat << EOF >main
 #!/usr/bin/env bash
+cwd=\`pwd\`
+cd \$(dirname \$0)
 
 env PYTHONPATH=\`pwd\`/lib64/ dbus-launch ./test
 
+cd $cwd
 EOF
 
 chmod a+x ./main
