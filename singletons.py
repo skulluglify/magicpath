@@ -23,7 +23,10 @@ from typing import Generator, List, Any, TypeVar, Union, Callable
 
 #     is_win: bool = field(default=True, repr=False)
 
+
+Path: Any
 Path = TypeVar("Path", bound="Path")
+
 
 @dataclass(frozen=False, order=True)
 class Path(object):
@@ -45,6 +48,7 @@ class Path(object):
 
         return f"Path(src=\"{self.src}\")"
 
+
 @dataclass(frozen=False, order=True)
 class WinPath(Path):
 
@@ -60,9 +64,10 @@ class WinPath(Path):
 
         return f"WinPath(src=\"{self.src}\")"
 
+
+MagicPathType: Any
 MagicPathType = TypeVar("MagicPathType", bound="MagicPathType")
-PathFinderNSType = TypeVar("PathFinderNSType", bound="PathFinderNSType")
-PathFinderType = TypeVar("PathFinderType", bound="PathFinderType")
+
 
 class System(Enum):
 
@@ -71,6 +76,7 @@ class System(Enum):
     Java: str = "Java"
     Windows: str = "Windows"
     Other: str = "Other"
+
 
 class MagicPathType(ABC):
 
@@ -139,24 +145,16 @@ class MagicPathType(ABC):
     def hook(self: MagicPathType, fn: Callable, src: Union[str, Path]) -> Any: pass
 
 
-class PathFinderNSType(ABC):
+PathFinderType: Any
+PathFinderType = TypeVar("PathFinderType", bound="PathFinderType")
+
+
+class PathFinderType(ABC):
 
     p: MagicPathType
     
     MAX_DEPTH: int
     MAX_TIME_RECURSION: int
-
-    @abstractmethod
-    def match(self: PathFinderNSType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None: pass
-
-    @abstractmethod
-    def matchbase(self: PathFinderNSType, src: Union[str, Path], callback: Callable) -> None: pass
-
-    @abstractmethod
-    def matchdir(self: PathFinderNSType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None: pass
-
-
-class PathFinderType(PathFinderNSType):
 
     #****************************************************************************************************************#
     #*                                                                                                              *#
@@ -218,10 +216,19 @@ class PathFinderType(PathFinderNSType):
     #****************************************************************************************************************#
 
     @abstractmethod
+    def match(self: PathFinderType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None: pass
+
+    @abstractmethod
     def match_hook(self: PathFinderType, fn: Callable, src: Union[str, Path], depth: int = 0) -> None: pass
 
     @abstractmethod
+    def matchbase(self: PathFinderType, src: Union[str, Path], callback: Callable) -> None: pass
+
+    @abstractmethod
     def matchbase_hook(self: PathFinderType, fn: Callable, src: Union[str, Path]) -> None: pass
+
+    @abstractmethod
+    def matchdir(self: PathFinderType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None: pass
 
     @abstractmethod
     def matchdir_hook(self: PathFinderType, fn: Callable, src: Union[str, Path], depth: int = 0) -> None: pass

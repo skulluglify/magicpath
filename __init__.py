@@ -11,7 +11,7 @@ def __wm() -> None:
 
     context: str
 
-    context = "#==============================================================#\n# MagicPath created by <skulluglify@outlook.com/>              #\n# version build v1.0.0 alpha, 2022-05-13 19:37:33.692429       #\n#==============================================================#"
+    context = "#==============================================================#\n# MagicPath created by <skulluglify@outlook.com/>              #\n# version build v1.0.0 alpha, 2022-05-19 09:29:56.252755       #\n#==============================================================#"
 
     print(context)
 

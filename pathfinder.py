@@ -7,18 +7,41 @@ import os, platform
 import ntpath as nt
 import pathlib as pl
 
-from typing import Callable, Generator, Any, List, TypeVar, Union
+from typing import Callable, Dict, Generator, Any, List, TypeVar, Union
 from .magicpath import MagicPath
-from .singletons import Path, PathFinderNSType, PathFinderType, System, WinPath
+from .singletons import Path, PathFinderType, System, WinPath
 
-PathFinderNS = TypeVar("PathFinderNS", bound="PathFinderNS")
+PathFinder: Any
+PathFinder: Any
+PathFinder = TypeVar("PathFinder", bound="PathFinder")
 PathFinder = TypeVar("PathFinder", bound="PathFinder")
 
-class PathFinderNS(PathFinderNSType):
+MemorizeBoolean = TypeVar("MemorizeBoolean", bound="MemorizeBoolean")
+
+class MemorizeBoolean(object):
+
+    value: bool
+
+    def __init__(self, value: bool = False):
+
+        self.value = value
+
+    def __bool__(self):
+
+        return self.value
+
+    def __repr__(self):
+
+        return str(self.value)
+
+    def setval(self, value: bool) -> None:
+
+        self.value = value
+    
+
+class PathFinder(PathFinderType):
 
     """
-    Not Safe for multithreading
-
     TODOS: fixed os.path if using winlook
     
     p: Any
@@ -35,25 +58,133 @@ class PathFinderNS(PathFinderNSType):
 
     p: MagicPath
 
-    __FINDPATH: bool
-
     MAX_DEPTH: int
     MAX_DEPTH = 0 #? Infinity
 
     MAX_TIME_RECURSION: int
     MAX_TIME_RECURSION = 1000
 
-    def __init__(self: PathFinderNS, *args: Any, **kwargs: Any):
+    def __init__(self: PathFinder, *args: Any, **kwargs: Any):
 
         self.__dict__.update(kwargs)
         self.p = MagicPath()
-        self.__FINDPATH = False
 
-    def match(self: PathFinderNS, src: Union[str, Path], callback: Callable, depth: int = 0) -> None:
+    #****************************************************************************************************************#
+    #*                                                                                                              *#
+    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
+    #*                                                                                                              *#
+    #****************************************************************************************************************#
+
+    MP_WORKDIR: str
+    MP_WORKDIR = "/"
+
+    MP_WINROOT: str
+    MP_WINROOT = "C:\\\\"
+    
+    MP_WINFORCE: bool
+    MP_WINFORCE = True
+
+    MP_WINLOOK: bool
+    MP_WINLOOK = False
+
+    def winlook(self: PathFinder, currentdir: Union[str, Path] = "/", winroot: Union[str, Path] = "C:\\\\", force: bool = True) -> bool:
+
+        self.MP_WORKDIR = currentdir
+        self.MP_WINROOT = winroot
+        self.MP_WINFORCE = force
+        self.MP_WINLOOK = True
+
+        self.p.winlook(currentdir, winroot, force)
+
+    #* disable winlook
+    def reset_factory(self: PathFinder) -> bool:
+
+        self.MP_WORKDIR = "/"
+        self.MP_WINROOT = "C:\\\\"
+        self.MP_WINFORCE = True
+        self.MP_WINLOOK = False
+
+        self.p.WORKDIR = os.getcwd()
+        self.p.WINDOWS = os.path is nt or platform.system().lower().startswith("win")
+    
+    def set_currentdir(self: PathFinder, src: Union[str, Path], force: bool = False) -> bool:
+
+        return self.p.set_currentdir(src, force)
+    
+    def set_win_rootdir(self: PathFinder, src: Union[str, Path], force: bool = False) -> bool:
+
+        return self.p.set_win_rootdir(src, force)
+    
+    def is_win(self: PathFinder) -> bool:
+
+        return self.p.is_win()
+    
+    def split(self: PathFinder, src: Union[str, Path], diff: bool = False) -> Generator[Any, None, None]:
+
+        yield from self.p.split(src, diff)
+    
+    def get_root(self: PathFinder, src: Union[str, Path]) -> Path:
+
+        return self.p.get_root(src)
+    
+    # def shift(self: PathFinder, src: Union[str, Path]) -> Path:
+
+    #     return self.p.shift(src)
+    
+    def is_root(self: PathFinder, src: Union[str, Path], diff: bool = False) -> bool:
+
+        return self.p.is_root(src, diff)
+    
+    def is_abspath(self: PathFinder, src: Union[str, Path]) -> bool:
+
+        return self.p.is_abspath(src)
+    
+    def is_diff(self: PathFinder, system: Union[str, System]) -> bool:
+
+        return self.p.is_diff(system)
+    
+    def abspath(self: PathFinder, src: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
+
+        return self.p.abspath(src, diff, winroot)
+    
+    def join(self: PathFinder, *srcs: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
+
+        return self.p.join(*srcs, diff, winroot)
+    
+    def hook(self: PathFinder, fn: Callable, src: Union[str, Path]) -> Any:
+
+        return self.p.hook(fn, src)
+
+    #****************************************************************************************************************#
+    #*                                                                                                              *#
+    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
+    #*                                                                                                              *#
+    #****************************************************************************************************************#
+
+    def __nosupports(self: PathFinder, name: Union[str, Callable] = "this func") -> None:
+
+        if callable(name):
+
+            name = name.__name__
+
+        if self.p.is_diff(System.Windows if self.p.is_win() else System.Other):
+
+            raise ValueError(f"PathFinder: {name} not support for different platform")
+
+    def match(self: PathFinder, src: Union[str, Path], callback: Callable, depth: int = 0) -> None:
+
+        self.__nosupports(self.match)
 
         self.matchdir(src, lambda dst: self.matchbase(dst, callback), depth)
 
-    def matchbase(self: PathFinderNS, src: Union[str, Path], callback: Callable) -> Any:
+    def match_hook(self: PathFinder, fn: Callable, src: Union[str, Path], depth: int = 0) -> None:
+
+        # self.match(src, lambda x: self.p.hook(fn, x), depth)
+        self.p.hook(lambda x: self.match(x, fn, depth), src)
+
+    def matchbase(self: PathFinder, src: Union[str, Path], callback: Callable) -> Any:
+
+        self.__nosupports(self.match)
 
         if isinstance(src, Path):
 
@@ -93,7 +224,14 @@ class PathFinderNS(PathFinderNSType):
 
         return
 
-    def matchdir(self: PathFinderNS, src: Union[str, Path], callback: Callable, depth: int = 0) -> Any:
+    def matchbase_hook(self: PathFinder, fn: Callable, src: Union[str, Path]) -> None:
+
+        # self.matchbase(src, lambda x: self.p.hook(fn, x))
+        self.p.hook(lambda x: self.matchbase(x, fn), src)
+
+    def matchdir(self: PathFinder, src: Union[str, Path], callback: Callable, depth: int = 0) -> Any:
+
+        self.__nosupports(self.match)
 
         if not self.p.is_abspath(src):
 
@@ -101,15 +239,22 @@ class PathFinderNS(PathFinderNSType):
 
         paths: List[str] = [p.src for p in self.p.split(src)]
 
-        self.__find_depth(paths, callback, depth)
+        self.__find_depth(
+            src=paths,
+            callback=callback,
+            depth=depth,
+            safe=MemorizeBoolean()
+        )
 
-        #* set back value
-        self.__FINDPATH = False
+    def matchdir_hook(self: PathFinder, fn: Callable, src: Union[str, Path], depth: int = 0) -> None:
 
-    def __find_depth(self: PathFinderNS, src: List[str], callback: Callable, depth: int = 0, cdepth: int = 0, max_time_recursion: int = 0, i: int = 0) -> Any:
+        # self.matchdir(src, lambda x: self.p.hook(fn, x), depth)
+        self.p.hook(lambda x: self.matchdir(src, x, depth), src)
+
+    def __find_depth(self: PathFinder, src: List[str], callback: Callable, depth: int = 0, cdepth: int = 0, max_time_recursion: int = 0, i: int = 0, safe: MemorizeBoolean = MemorizeBoolean()) -> Any:
 
         #* stop recursion
-        if self.__FINDPATH: return
+        if safe: return
 
         #* safety check
         if self.MAX_TIME_RECURSION <= max_time_recursion: return
@@ -171,11 +316,13 @@ class PathFinderNS(PathFinderNSType):
                                 #* refresh path as string
                                 c = self.p.join(*tuple(src[i] for i in range(i))).src
 
-                                if callable(callback):
+                                if not safe:
 
-                                    callback(c)
+                                    if callable(callback):
 
-                                self.__FINDPATH = True
+                                        callback(c)
+
+                                safe.setval(True)
 
                                 return
 
@@ -193,185 +340,12 @@ class PathFinderNS(PathFinderNSType):
 
         else:
 
-            if callable(callback):
+            if not safe:
 
-                callback(c)
+                if callable(callback):
 
-            self.__FINDPATH = True
+                    callback(c)
+
+            safe.setval(True)
             
             return
-
-
-class PathFinder(PathFinderType):
-
-    """
-    Safe for multithrading
-    but slower than PathFinderNS
-    this classes is Wrapper for PathFinderNS
-    """
-
-    p: MagicPath
-
-    def __init__(self: PathFinderType, *args: Any, **kwargs: Any):
-
-        self.__dict__.update(kwargs)
-        self.p = MagicPath()
-
-    #****************************************************************************************************************#
-    #*                                                                                                              *#
-    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
-    #*                                                                                                              *#
-    #****************************************************************************************************************#
-
-    MP_WORKDIR: str
-    MP_WORKDIR = "/"
-
-    MP_WINROOT: str
-    MP_WINROOT = "C:\\\\"
-    
-    MP_WINFORCE: bool
-    MP_WINFORCE = True
-
-    MP_WINLOOK: bool
-    MP_WINLOOK = False
-
-    def winlook(self: PathFinderType, currentdir: Union[str, Path] = "/", winroot: Union[str, Path] = "C:\\\\", force: bool = True) -> bool:
-
-        self.MP_WORKDIR = currentdir
-        self.MP_WINROOT = winroot
-        self.MP_WINFORCE = force
-        self.MP_WINLOOK = True
-
-        self.p.winlook(currentdir, winroot, force)
-
-    #* disable winlook
-    def reset_factory(self: PathFinderType) -> bool:
-
-        self.MP_WORKDIR = "/"
-        self.MP_WINROOT = "C:\\\\"
-        self.MP_WINFORCE = True
-        self.MP_WINLOOK = False
-
-        self.p.WORKDIR = os.getcwd()
-        self.p.WINDOWS = os.path is nt or platform.system().lower().startswith("win")
-
-    def __winlook(self: PathFinderType, pf: PathFinderNSType) -> None:
-
-        if self.MP_WINLOOK:
-            pf.p.winlook(
-                self.MP_WORKDIR,
-                self.MP_WINROOT,
-                self.MP_WINFORCE
-            )
-    
-    def set_currentdir(self: PathFinderType, src: Union[str, Path], force: bool = False) -> bool:
-
-        return self.p.set_currentdir(src, force)
-    
-    def set_win_rootdir(self: PathFinderType, src: Union[str, Path], force: bool = False) -> bool:
-
-        return self.p.set_win_rootdir(src, force)
-    
-    def is_win(self: PathFinderType) -> bool:
-
-        return self.p.is_win()
-    
-    def split(self: PathFinderType, src: Union[str, Path], diff: bool = False) -> Generator[Any, None, None]:
-
-        yield from self.p.split(src, diff)
-    
-    def get_root(self: PathFinderType, src: Union[str, Path]) -> Path:
-
-        return self.p.get_root(src)
-    
-    # def shift(self: PathFinderType, src: Union[str, Path]) -> Path:
-
-    #     return self.p.shift(src)
-    
-    def is_root(self: PathFinderType, src: Union[str, Path], diff: bool = False) -> bool:
-
-        return self.p.is_root(src, diff)
-    
-    def is_abspath(self: PathFinderType, src: Union[str, Path]) -> bool:
-
-        return self.p.is_abspath(src)
-    
-    def is_diff(self: PathFinderType, system: Union[str, System]) -> bool:
-
-        return self.p.is_diff(system)
-    
-    def abspath(self: PathFinderType, src: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
-
-        return self.p.abspath(src, diff, winroot)
-    
-    def join(self: PathFinderType, *srcs: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
-
-        return self.p.join(*srcs, diff, winroot)
-    
-    def hook(self: PathFinderType, fn: Callable, src: Union[str, Path]) -> Any:
-
-        return self.p.hook(fn, src)
-
-    #****************************************************************************************************************#
-    #*                                                                                                              *#
-    #* methods from MagicPath, Exclude Methods escape, unescape, shift                                              *#
-    #*                                                                                                              *#
-    #****************************************************************************************************************#
-
-    def __getpf(self: PathFinderType) -> PathFinderNSType:
-
-        pf: PathFinderNSType = PathFinderNS()
-        self.__winlook(pf)
-        return pf
-
-    def __nosupports(self: PathFinderType, pf: PathFinderNSType, name: Union[str, Callable] = "this func") -> None:
-
-        if callable(name):
-
-            name = name.__name__
-
-        if self.p.is_diff(System.Windows if pf.p.is_win() else System.Other):
-
-            raise ValueError(f"PathFinder: {name} not support for different platform")
-
-    def match(self: PathFinderType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.match)
-
-        pf.match(src, callback, depth)
-
-    def matchbase(self: PathFinderType, src: Union[str, Path], callback: Callable) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.matchbase)
-
-        pf.matchbase(src, callback)
-
-    def matchdir(self: PathFinderType, src: Union[str, Path], callback: Callable, depth: int = 0) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.matchdir)
-
-        pf.matchdir(src, callback, depth)
-
-    def match_hook(self: PathFinderType, fn: Callable, src: Union[str, Path], depth: int = 0) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.match_hook)
-
-        pf.p.hook(lambda dst: pf.match(dst, fn, depth), src)
-
-    def matchbase_hook(self: PathFinderType, fn: Callable, src: Union[str, Path]) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.matchbase_hook)
-
-        pf.p.hook(lambda dst: pf.matchbase(dst, fn), src)
-
-    def matchdir_hook(self: PathFinderType, fn: Callable, src: Union[str, Path], depth: int = 0) -> None:
-
-        pf: PathFinderNSType = self.__getpf()
-        self.__nosupports(pf, self.matchdir_hook)
-        
-        pf.p.hook(lambda dst: pf.matchdir(dst, fn, depth), src)

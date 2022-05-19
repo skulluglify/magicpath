@@ -9,12 +9,14 @@ import posixpath as ps
 import pathlib as pl
 
 from typing import Callable, Generator, Any, List, TypeVar, Union
-from .singletons import Path, PathFinderNSType, System, MagicPathType, WinPath
+from .singletons import Path, System, MagicPathType, WinPath
 
 #? make dynamic path
 #? platform.system() in ("Linux", "Darwin", "Java", "Windows")
 
+MagicPath: Any
 MagicPath = TypeVar("MagicPath", bound="MagicPath")
+
 
 class MagicPath(MagicPathType):
 
@@ -33,7 +35,7 @@ class MagicPath(MagicPathType):
     WINROOT: str
     WINROOT = "C:\\\\"
 
-    def winlook(self: MagicPathType, currentdir: Union[str, Path] = "/", winroot: Union[str, Path] = "C:\\\\", force: bool = True) -> bool:
+    def winlook(self: MagicPath, currentdir: Union[str, Path] = "/", winroot: Union[str, Path] = "C:\\\\", force: bool = True) -> bool:
 
         if isinstance(currentdir, Path):
 
@@ -54,7 +56,7 @@ class MagicPath(MagicPathType):
 
         return True
 
-    def set_currentdir(self: MagicPathType, src: Union[str, Path], force: bool = False) -> bool:
+    def set_currentdir(self: MagicPath, src: Union[str, Path], force: bool = False) -> bool:
 
         if isinstance(src, Path):
 
@@ -72,7 +74,7 @@ class MagicPath(MagicPathType):
 
         return False
 
-    def set_win_rootdir(self: MagicPathType, src: Union[str, Path], force: bool = False) -> bool:
+    def set_win_rootdir(self: MagicPath, src: Union[str, Path], force: bool = False) -> bool:
 
         if isinstance(src, Path):
 
@@ -86,11 +88,11 @@ class MagicPath(MagicPathType):
 
         return False
 
-    def is_win(self: MagicPathType) -> bool:
+    def is_win(self: MagicPath) -> bool:
 
         return self.WINDOWS
 
-    def __is_win(self: MagicPathType, diff: bool = False) -> bool:
+    def __is_win(self: MagicPath, diff: bool = False) -> bool:
 
         #* win diff == pos
         #* win not diff == nt
@@ -104,7 +106,7 @@ class MagicPath(MagicPathType):
 
         return self.WINDOWS ^ diff
 
-    def split(self: MagicPathType, src: Union[str, Path], diff: bool = False) -> Generator[Any, None, None]:
+    def split(self: MagicPath, src: Union[str, Path], diff: bool = False) -> Generator[Any, None, None]:
 
         dst: str
 
@@ -130,7 +132,7 @@ class MagicPath(MagicPathType):
 
         yield from self.__split(dst, diff)
 
-    def __split(self: MagicPathType, src: str, diff: bool = False) -> Generator[Any, None, None]:
+    def __split(self: MagicPath, src: str, diff: bool = False) -> Generator[Any, None, None]:
 
         cdir: str
         cbase: str
@@ -146,7 +148,7 @@ class MagicPath(MagicPathType):
 
         yield WinPath(src=cbase) if self.__is_win(diff) else Path(src=cbase)
 
-    def get_root(self: MagicPathType, src: Union[str, Path]) -> Path:
+    def get_root(self: MagicPath, src: Union[str, Path]) -> Path:
 
         if isinstance(src, Path):
 
@@ -179,7 +181,7 @@ class MagicPath(MagicPathType):
 
             return self.shift(src)
 
-    def shift(self: MagicPathType, src: Union[str, Path]) -> Path:
+    def shift(self: MagicPath, src: Union[str, Path]) -> Path:
 
         if isinstance(src, Path):
 
@@ -202,7 +204,7 @@ class MagicPath(MagicPathType):
 
         return WinPath(src=context) if self.WINDOWS else Path(src=context)
 
-    def is_root(self: MagicPathType, src: Union[str, Path], diff: bool = False) -> bool:
+    def is_root(self: MagicPath, src: Union[str, Path], diff: bool = False) -> bool:
 
         if isinstance(src, Path):
 
@@ -226,7 +228,7 @@ class MagicPath(MagicPathType):
 
         return src in ("/", "")
 
-    def escape(self: MagicPathType, context: str) -> str:
+    def escape(self: MagicPath, context: str) -> str:
 
         if " " in context:
 
@@ -235,7 +237,7 @@ class MagicPath(MagicPathType):
         #* bad idea but still work enough
         return context
 
-    def unescape(self: MagicPathType, context: str) -> str:
+    def unescape(self: MagicPath, context: str) -> str:
 
         n: int
         n = len(context)
@@ -267,7 +269,7 @@ class MagicPath(MagicPathType):
         #* bad idea but still work enough
         return context
 
-    def is_abspath(self: MagicPathType, src: Union[str, Path]) -> bool:
+    def is_abspath(self: MagicPath, src: Union[str, Path]) -> bool:
 
         if isinstance(src, Path):
 
@@ -281,7 +283,7 @@ class MagicPath(MagicPathType):
             and len(src) >= 4
         )
 
-    def is_diff(self: MagicPathType, system: Union[str, System]) -> bool:
+    def is_diff(self: MagicPath, system: Union[str, System]) -> bool:
 
         #* win win not diff
         #* win pos diff
@@ -297,7 +299,7 @@ class MagicPath(MagicPathType):
 
         return self.WINDOWS ^ (system.lower().startswith("win"))
 
-    def abspath(self: MagicPathType, src: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
+    def abspath(self: MagicPath, src: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
 
         if isinstance(src, Path):
 
@@ -372,7 +374,7 @@ class MagicPath(MagicPathType):
 
         return WinPath(src=dst) if self.WINDOWS else Path(src=dst)
 
-    def join(self: MagicPathType, *srcs: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
+    def join(self: MagicPath, *srcs: Union[str, Path], diff: bool = False, winroot: Union[str, Path] = "\\") -> Path:
 
         c: str
         d: bool
@@ -423,8 +425,7 @@ class MagicPath(MagicPathType):
 
         return WinPath(src=self.__join(t, winroot)) if self.WINDOWS else Path(src=self.__join(t))
 
-
-    def __join(self, srcs: List[str], winroot: str = "\\") -> str:
+    def __join(self: MagicPath, srcs: List[str], winroot: str = "\\") -> str:
 
         n: int
         dst: str
@@ -458,7 +459,7 @@ class MagicPath(MagicPathType):
 
         return dst
 
-    def hook(self: MagicPathType, fn: Callable, src: Union[str, Path]) -> Any:
+    def hook(self: MagicPath, fn: Callable, src: Union[str, Path]) -> Any:
 
         #* handling error, type error
         if not callable(fn):
